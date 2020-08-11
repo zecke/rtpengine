@@ -587,7 +587,7 @@ static void cli_incoming_list_callid(str *instr, struct streambuf *replybuffer) 
 					: "0.0.0.0";
 
 				streambuf_printf(replybuffer, "-------- Port %15s:%-5u <> %15s:%-5u%s, SSRC %" PRIx32 ", "
-						 "" UINT64F " p, " UINT64F " b, " UINT64F " e, " UINT64F " ts",
+						 "" UINT64F " p, " UINT64F " b, " UINT64F " e, " UINT64F " ts, " UINT64F " bool",
 						 local_addr,
 						 (unsigned int) (ps->selected_sfd ? ps->selected_sfd->socket.local.port : 0),
 						 sockaddr_print_buf(&ps->endpoint.address),
@@ -596,7 +596,8 @@ static void cli_incoming_list_callid(str *instr, struct streambuf *replybuffer) 
 						 ps->ssrc_in ? ps->ssrc_in->parent->h.ssrc : 0,
 						 atomic64_get(&ps->stats.packets),
 						 atomic64_get(&ps->stats.bytes), atomic64_get(&ps->stats.errors),
-						 atomic64_get(&ps->last_packet));
+						 atomic64_get(&ps->last_packet),
+						 atomic64_get(&ps->stats.recrypting));
 #if RE_HAS_MEASUREDELAY
 				if (PS_ISSET(ps, RTP) || !PS_ISSET(ps, RTCP))
 					streambuf_printf(replybuffer, ", %.9f delay_min, %.9f delay_avg, %.9f delay_max",
