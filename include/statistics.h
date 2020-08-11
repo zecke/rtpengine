@@ -20,6 +20,7 @@ struct stats {
 	atomic64			answers;
 	atomic64			deletes;
 	atomic64			transcoded_media;
+	atomic64			recrypting;
 };
 
 

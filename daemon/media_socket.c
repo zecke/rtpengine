@@ -1523,6 +1523,11 @@ static void media_packet_rtp(struct packet_handler_ctx *phc)
 static int media_packet_decrypt(struct packet_handler_ctx *phc)
 {
 	mutex_lock(&phc->in_srtp->in_lock);
+
+	if (!phc->in_srtp->handler && __must_recrypt(phc->in_srtp, phc->sink)) {
+		atomic64_set(&phc->mp.stream->stats.recrypting, 1);
+	}
+
 	__determine_handler(phc->in_srtp, phc->sink);
 
 	// XXX use an array with index instead of if/else
