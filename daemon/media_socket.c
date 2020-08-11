@@ -1275,23 +1275,22 @@ err:
 	return &__sh_noop;
 }
 
-/* must be called with call->master_lock held in R, and in->in_lock held */
-static void __determine_handler(struct packet_stream *in, const struct packet_stream *out) {
+
+static int __must_recrypt(const struct packet_stream *in, const struct packet_stream *out) {
 	const struct transport_protocol *in_proto, *out_proto;
 	int must_recrypt = 0;
 
-	if (in->handler)
-		return;
 	if (MEDIA_ISSET(in->media, PASSTHRU))
-		goto noop;
+		goto out;
 
 	in_proto = in->media->protocol;
 	out_proto = out->media->protocol;
 
 	if (!in_proto)
-		goto err;
+		goto out;
 	if (!out_proto)
-		goto err;
+		goto out;
+
 
 	if (dtmf_do_logging())
 		must_recrypt = 1;
@@ -1307,6 +1306,26 @@ static void __determine_handler(struct packet_stream *in, const struct packet_st
 				|| crypto_params_cmp(&out->crypto.params, &in->selected_sfd->crypto.params)))
 		must_recrypt = 1;
 
+out:
+	return must_recrypt;
+}
+
+
+/* must be called with call->master_lock held in R, and in->in_lock held */
+static void __determine_handler(struct packet_stream *in, const struct packet_stream *out) {
+	const struct transport_protocol *in_proto;
+	int must_recrypt;
+
+	if (in->handler)
+		return;
+	if (MEDIA_ISSET(in->media, PASSTHRU))
+		goto noop;
+
+	in_proto = in->media->protocol;
+	if (!in_proto)
+		goto err;
+
+	must_recrypt = __must_recrypt(in, out);
 	in->handler = determine_handler(in_proto, out->media, must_recrypt);
 	return;
 
